@@ -1,8 +1,7 @@
 package com.jawaskrip;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Scanner;
 
 public class CDSR {
@@ -10,6 +9,7 @@ public class CDSR {
     static double balance=getBalanceFromUsername(login.username);
     static boolean svngs = false;
     static int save =0;
+    
     
     public static int getBalanceFromUsername(String username) {
         String query = "SELECT a.acc_amount FROM profile p JOIN account a ON p.user_id = a.user_id WHERE p.username = ?";
@@ -56,6 +56,7 @@ public class CDSR {
 
     public static void credit(){
         boolean truth = true;
+        String desc = "";
 
         System.out.println("==Credit==");
         Scanner scan = new Scanner(System.in);
@@ -65,7 +66,7 @@ public class CDSR {
 
         while(truth == true){
             System.out.print("Description : ");
-            String desc = scan.nextLine();
+            desc = scan.nextLine();
 
             if( desc.length() > 100){
                 System.out.print("\nDescription is too long. Please write it again. \n");
@@ -78,32 +79,41 @@ public class CDSR {
         if(cre>= 0 && cre<= balance){
             balance-=cre;
             System.out.println("Credit successfully recorded !! \n");
+
+            String updateSQL = "UPDATE account SET acc_amount = ? WHERE account_id = ?";
+            String updateSQL2 = "INSERT INTO transaction (account_id, amount_transacted, transaction_type, transaction_date, description) VALUES (?, ?, ?, ?, ?)";
+            try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
+                PreparedStatement preparedStatement = connection.prepareStatement(updateSQL);
+                PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL2)) {
+    
+                // Set the parameters for the SQL query
+                preparedStatement.setDouble(1, balance); // Set the new balance
+                preparedStatement.setInt(2, getAccountIdFromUsername(login.username));     // Set the account ID
+    
+                // Execute the update query
+                int rowsAffected = preparedStatement.executeUpdate(); // Returns the number of rows affected
+    
+                preparedStatement2.setInt(1, getAccountIdFromUsername(login.username));
+                preparedStatement2.setDouble(2, cre);
+                preparedStatement2.setString(3, "Credit");
+                preparedStatement2.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                preparedStatement2.setString(5, desc);
+
+                int rowsAffected2 = preparedStatement2.executeUpdate(); // Returns the number of rows affected
+
+                if (rowsAffected > 0 && rowsAffected2 > 0) {
+                    System.out.println("Account balance updated successfully.");
+                } else {
+                    System.out.println("Failed to update account balance.");
+                }
+            } catch (SQLException e) {
+                System.out.println("Error updating account balance: " + e.getMessage());
+            }
+
         }
         else{
             System.out.println("Transaction failed \n");
         }
-
-        String updateSQL = "UPDATE account SET acc_amount = ? WHERE account_id = ?";
-        try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
-             PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
-
-            // Set the parameters for the SQL query
-            preparedStatement.setDouble(1, balance); // Set the new balance
-            preparedStatement.setInt(2, getAccountIdFromUsername(login.username));     // Set the account ID
-
-            // Execute the update query
-            int rowsAffected = preparedStatement.executeUpdate(); // Returns the number of rows affected
-
-            if (rowsAffected > 0) {
-                System.out.println("Account balance updated successfully.");
-            } else {
-                System.out.println("Failed to update account balance.");
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error updating account balance: " + e.getMessage());
-        }
-
         }
         
         
@@ -111,6 +121,7 @@ public class CDSR {
     public static void debit() {
         double extra=0;
         boolean truth = true;
+        String desc = "";
         System.out.println("==Debit==");
         Scanner scan = new Scanner(System.in);
         System.out.print("Enter amount : ");
@@ -122,7 +133,7 @@ public class CDSR {
 
         while(truth == true){
             System.out.print("Description : ");
-            String desc = scan.nextLine();
+            desc = scan.nextLine();
 
             if( desc.length() > 100){
                 System.out.print("\nDescription is too long. Please write it again. \n");
@@ -137,30 +148,41 @@ public class CDSR {
             balance+=deb;
             balance+=extra;
             System.out.println("Debit successfully recorded !! \n");
+
+
+            String updateSQL = "UPDATE account SET acc_amount = ? WHERE account_id = ?";
+            String updateSQL2 = "INSERT INTO transaction (account_id, amount_transacted, transaction_type, transaction_date, description) VALUES (?, ?, ?, ?, ?)";
+            try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
+                 PreparedStatement preparedStatement = connection.prepareStatement(updateSQL);
+                 PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL2)) {
+    
+                // Set the parameters for the SQL query
+                preparedStatement.setDouble(1, balance); // Set the new balance
+                preparedStatement.setInt(2, getAccountIdFromUsername(login.username));     // Set the account ID
+                // Execute the update query
+                int rowsAffected = preparedStatement.executeUpdate(); // Returns the number of rows affected
+
+                preparedStatement2.setInt(1, getAccountIdFromUsername(login.username));
+                preparedStatement2.setDouble(2, deb);
+                preparedStatement2.setString(3, "Debit");
+                preparedStatement2.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                preparedStatement2.setString(5, desc);
+
+                int rowsAffected2 = preparedStatement2.executeUpdate(); // Returns the number of rows affected
+    
+                if (rowsAffected > 0 && rowsAffected2 > 0) {
+                    System.out.println("Account balance updated successfully.");
+                } else {
+                    System.out.println("Failed to update account balance.");
+                }
+    
+            } catch (SQLException e) {
+                System.out.println("Error updating account balance: " + e.getMessage());
+            }
+
         }
         else{
             System.out.println("Transaction failed \n");
-        }
-
-        String updateSQL = "UPDATE account SET acc_amount = ? WHERE account_id = ?";
-        try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
-             PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
-
-            // Set the parameters for the SQL query
-            preparedStatement.setDouble(1, balance); // Set the new balance
-            preparedStatement.setInt(2, getAccountIdFromUsername(login.username));     // Set the account ID
-
-            // Execute the update query
-            int rowsAffected = preparedStatement.executeUpdate(); // Returns the number of rows affected
-
-            if (rowsAffected > 0) {
-                System.out.println("Account balance updated successfully.");
-            } else {
-                System.out.println("Failed to update account balance.");
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error updating account balance: " + e.getMessage());
         }
         System.out.println(balance);
     }
