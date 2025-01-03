@@ -51,6 +51,11 @@ public class App {
                 CDSR.Savings();
                 break;
                 case 4:
+                jawaSkripFinance.credLoan();
+                break;
+                case 5:
+                jawaSkripFinance.depositInterestPredictor();
+                case 6:
                 truth=false;
                 break;
                 default:

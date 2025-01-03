@@ -191,6 +191,27 @@ public class CDSR {
 
         if(svngs==true){
             extra = (save/100.0)*deb;
+            
+            String updateSQL = "UPDATE savings SET svg_amount = svg_amount + ? WHERE user_id = ?";
+
+            try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
+                PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
+    
+                // Set the parameters for the SQL query
+                preparedStatement.setDouble(1, extra); // Set the new balance
+                preparedStatement.setInt(2, getUserIDFromUsername(login.username));     // Set the account ID
+    
+                // Execute the update query
+                int rowsAffected = preparedStatement.executeUpdate(); // Returns the number of rows affected
+    
+                if (rowsAffected > 0) {
+                    System.out.println("Savings updated successfully.");
+                } else {
+                    System.out.println("Failed to update savings.");
+                }
+            } catch (SQLException e) {
+                System.out.println("Error updating savings: " + e.getMessage());
+            }
         }
 
         while(truth == true){
@@ -208,7 +229,6 @@ public class CDSR {
        
         if(deb>= 0 && deb<= 50000){
             balance+=deb;
-            balance+=extra;
             System.out.println("Debit successfully recorded !! \n");
 
 
