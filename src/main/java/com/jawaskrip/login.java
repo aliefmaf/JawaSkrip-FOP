@@ -22,11 +22,13 @@ public class login {
 
         String insertQuery = "INSERT INTO profile (username, password) VALUES (?, ?)";
         String insertAccountQuery = "INSERT INTO account (user_id) VALUES (?)";
+        String insertSavingsQuery = "INSERT INTO savings (user_id) VALUES (?)";
 
 
         try (Connection connection = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(insertQuery,  Statement.RETURN_GENERATED_KEYS);
-             PreparedStatement accountStatement = connection.prepareStatement(insertAccountQuery)) {
+             PreparedStatement accountStatement = connection.prepareStatement(insertAccountQuery);
+             PreparedStatement savingsStatement = connection.prepareStatement(insertSavingsQuery)) {
 
 
             // Set parameters for the query
@@ -35,11 +37,16 @@ public class login {
             preparedStatement.executeUpdate();
 
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+
             if (generatedKeys.next()) {
                 int userId = generatedKeys.getInt(1);
                 // Step 3: Insert into account table using the retrieved user_id
                 accountStatement.setInt(1, userId);
                 accountStatement.executeUpdate();
+
+                savingsStatement.setInt(1, userId);
+                savingsStatement.executeUpdate();
+
             System.out.println("Registration successful!");
             } else {
                 System.out.println("Registration failed.");

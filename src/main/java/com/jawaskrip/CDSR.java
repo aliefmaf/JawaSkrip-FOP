@@ -7,8 +7,8 @@ import java.util.Scanner;
 public class CDSR {
 
     static double balance=getBalanceFromUsername(login.username);
-    static boolean svngs = false;
-    static int save =0;
+    static boolean svngs = getSvgStatusFromUserID(getUserIDFromUsername(login.username));
+    static int save = getSvgPercentageFromUserID(getUserIDFromUsername(login.username));
     
     
     public static int getBalanceFromUsername(String username) {
@@ -53,6 +53,68 @@ public class CDSR {
 
     }
 
+    
+    public static int getUserIDFromUsername(String username) {
+        String query = "SELECT user_id FROM profile WHERE username = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, username);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getInt("user_id"); // Retrieve user_id
+            } else {
+                System.out.println("No user found for username: " + username);
+                return -1;  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving user ID: " + e.getMessage());
+            return -1;
+        }
+    }
+
+
+    public static boolean getSvgStatusFromUserID(int UserID) {
+        String query = "SELECT svg_status FROM savings WHERE user_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, UserID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getBoolean("svg_status"); // Retrieve svg_status
+            } else {
+                System.out.println("No user found for username svgstat: " + UserID);
+                return false;  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving user ID: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    public static int getSvgPercentageFromUserID(int UserID) {
+        String query = "SELECT svg_percentage FROM savings WHERE user_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, UserID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getInt("svg_percentage"); // Retrieve svg_percentage
+            } else {
+                System.out.println("No user found for username svgperc: " + UserID);
+                return -1;  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving user ID: " + e.getMessage());
+            return -1;
+        }
+    }
 
     public static void credit(){
         boolean truth = true;
@@ -117,7 +179,6 @@ public class CDSR {
         }
         
         
-        
     public static void debit() {
         double extra=0;
         boolean truth = true;
@@ -127,6 +188,7 @@ public class CDSR {
         System.out.print("Enter amount : ");
         double deb = scan.nextDouble();
         scan.nextLine();
+
         if(svngs==true){
             extra = (save/100.0)*deb;
         }
@@ -192,22 +254,42 @@ public class CDSR {
         Scanner scan = new Scanner(System.in);
 
         while(svngs==false){
-        System.out.println("==Savings==\n");
-        System.out.print("Are you sure you want to activate it? (Y/N) : ");
-        resp=scan.nextLine();
+            System.out.println("==Savings==\n");
+            System.out.print("Are you sure you want to activate it? (Y/N) : ");
+            resp=scan.nextLine();
 
-        if(resp.trim().equalsIgnoreCase("Y")){
-            svngs=true;
-            continue;
-        }
-        else{
-            return;
-        }
+            if(resp.trim().equalsIgnoreCase("Y")){
+                System.out.print("Please enter the percentage you wish to deduct from the next debit: ");
+                save = scan.nextInt();
+
+                String updateSQL = "UPDATE savings SET svg_status = TRUE, svg_percentage = ? WHERE user_id = ?";
+                try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
+                    PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
+    
+                    // Set the parameters for the SQL query
+                    preparedStatement.setInt(1, save); 
+                    preparedStatement.setInt(2, getUserIDFromUsername(login.username)); 
+
+                    // Execute the update query
+                    int rowsAffected = preparedStatement.executeUpdate(); // Returns the number of rows affected
+    
+                    if (rowsAffected > 0) {
+                        System.out.println("Savings activated successfully.");
+                    } else {
+                        System.out.println("Failed to activate savings.");
+                    }
+                } catch (SQLException e) {
+                    System.out.println("Error activating savings: " + e.getMessage());
+                }
+
+                svngs=true;
+                continue;
+            }
+            else{
+                return;
+            }
         
         }
-
-        System.out.print("Please enter the percentage you wish to deduct from the next debit: ");
-        save = scan.nextInt();
 
 
 
