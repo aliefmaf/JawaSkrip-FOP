@@ -257,9 +257,29 @@ public class jawaSkripFinance {
                 break;
 
             case 2:
-                System.out.printf("Please pay the following amount: RM%.2f%n", payment_per_period);
+                String selectQuery = "SELECT payment_per_period FROM loan WHERE user_id = ?";    
+                try (Connection connection = DatabaseUtil.getConnection();
+                    PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
 
-                
+                    // Set parameters for the query
+                    preparedStatement.setInt(1, CDSR.getUserIDFromUsername(login.username));
+
+                    // Execute the query
+                    ResultSet resultSet = preparedStatement.executeQuery();
+
+                    if (resultSet.next()) {
+                        payment_per_period = resultSet.getDouble("payment_per_period");
+                    } else {
+                        System.out.println("Error: Loan not found.");
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.printf("Please pay the following amount: RM%.2f%n", payment_per_period);
+                System.out.println("Enter amount you want to pay(amount will be credited out of your account):");
+
+                // finsih repayment here
 
                 break;
             default:

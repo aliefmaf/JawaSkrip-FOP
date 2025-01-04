@@ -193,7 +193,6 @@ public class CDSR {
             extra = (save/100.0)*deb;
             
             String updateSQL = "UPDATE savings SET svg_amount = svg_amount + ? WHERE user_id = ?";
-
             try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
                 PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
     
