@@ -1,5 +1,6 @@
 package com.jawaskrip;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Scanner;
@@ -116,6 +117,41 @@ public class CDSR {
         }
     }
 
+    public static boolean compareDates(int loanID) {
+        String query = "SELECT end_date FROM loan WHERE loan_id = ?";
+
+        try (Connection connection = DatabaseUtil.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, loanID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                // Retrieve the date from the database
+                Date endDate = resultSet.getDate("end_date"); // Or use getTimestamp if it's a timestamp
+
+                // Convert to LocalDate or LocalDateTime
+                LocalDate dbDate = endDate.toLocalDate();
+
+                // Get current date
+                LocalDate currentDate = LocalDate.now();
+
+                // Compare dates
+                if (dbDate.isAfter(currentDate)) {
+                    return true;
+                } else {
+                    System.out.println("You have an outstanding loan. Please repay it first.");
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        } catch (SQLException e) {
+            return true;
+        }
+    }
+    
+
     public static void credit(){
         boolean truth = true;
         String desc = "";
@@ -176,9 +212,10 @@ public class CDSR {
         else{
             System.out.println("Transaction failed \n");
         }
-        }
-        
-        
+
+        scan.close();
+    }
+            
     public static void debit() {
         double extra=0;
         boolean truth = true;
@@ -225,7 +262,7 @@ public class CDSR {
             }
         }
         
-       
+
         if(deb>= 0 && deb<= 50000){
             balance+=deb;
             System.out.println("Debit successfully recorded !! \n");
@@ -266,12 +303,13 @@ public class CDSR {
             System.out.println("Transaction failed \n");
         }
         System.out.println(balance);
+        scan.close();
     }
+
 
     public static void Savings(){
         String resp;
         Scanner scan = new Scanner(System.in);
-
         while(svngs==false){
             System.out.println("==Savings==\n");
             System.out.print("Are you sure you want to activate it? (Y/N) : ");
@@ -307,76 +345,9 @@ public class CDSR {
             else{
                 return;
             }
-        
         }
-
-
-
+        scan.close();
     }
 
 
-    public static void main(String[] args) {
-        /*
-        Scanner scan = new Scanner(System.in);
-        int choice;
-        boolean truth = true;
-
-        while(truth== true){
-
-        System.out.println("==Transactions==");
-        System.out.println("1.Credit \n2.Debit\n3.Savings\n4.Quit\n");
-
-        choice = scan.nextInt();
-
-        switch(choice){
-            case 1:
-            credit();
-            break;
-            case 2:
-            debit();
-            break;
-            case 3:
-            Savings();
-            break;
-            case 4:
-            truth=false;
-            break;
-            default:
-            System.out.println("Invalid input \n");
-            break;
-        }
-
-        }
-
-        System.out.println(balance);
-        */
-             
-
-    }
 }
-
-
-
-/* 
-String selectQuery = "UPDATE account SET acc_amount = ? WHERE account_id = ?";
-try (Connection connection = DatabaseUtil.getConnection();
-PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
-
-// Set parameters for the query
-preparedStatement.setString(1, username);
-preparedStatement.setString(2, hashedPassword);
-
-// Execute the query
-ResultSet resultSet = preparedStatement.executeQuery();
-
-if (resultSet.next()) {
-   System.out.println("Login successful! Welcome, " + username + "!");
-   success = true; // Login successful, exit loop
-} else {
-   System.out.println("Login failed. Please try again.");
-}
-
-} catch (SQLException e) {
-e.printStackTrace();
-}
-*/

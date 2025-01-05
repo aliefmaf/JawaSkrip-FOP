@@ -122,8 +122,69 @@ import java.util.Scanner;
 import java.sql.*;
 import java.util.HashMap;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 
 public class jawaSkripFinance {
+
+    public static int getLoanIDFromUserID(int UserID) {
+        String query = "SELECT loan_id FROM loan WHERE user_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, UserID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getInt("loan_id"); // Retrieve loan_id if user has a loan
+            } else {
+                System.out.println("No loan found for user_id1 : " + UserID);
+                return -1;  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving user ID: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    public static double getTotalRepaymentFromLoanID(int LoanID) {
+        String query = "SELECT total_repayment FROM loan WHERE loan_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, LoanID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getInt("total_repayment"); // Retrieve total_repayment if user has a loan
+            } else {
+                System.out.println("No loan found for user_id2: " + LoanID);
+                return -1;  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving user ID: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    public static double getTotalAmountPaidFromLoanID(int LoanID) {
+        String query = "SELECT total_amount_paid FROM loan WHERE loan_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, LoanID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getInt("total_amount_paid"); // Retrieve total_repayment if user has a loan
+            } else {
+                System.out.println("No loan found for repayment_id3: " + LoanID);
+                return -1;  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving user ID: " + e.getMessage());
+            return -1;
+        }
+    }
 
     public static double calculateTotalRepayment(double principalAmount, double annualInterestRate, double repaymentPeriod) {
         // Convert annual interest rate from percentage to decimal
@@ -170,11 +231,17 @@ public class jawaSkripFinance {
         int Cl = 0, schedule_pay = 0;
         double principal_amount, interest_rate, repayment_period;
         double total_repayment = 0, payment_per_period = 0;
-        System.out.println("1. Apply\n2. Repay");
+        System.out.println("1.Apply\n2.Repay");
         Cl = input.nextInt();
 
         switch (Cl) {
             case 1:
+                //check if user has an existing loan
+                if (getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)) != -1) {
+                    System.out.println("Error: User already has an existing loan.");
+                    break;
+                }
+
                 System.out.println("Enter principal amount"); //loan: principal_amount 
                 principal_amount = input.nextDouble();
                 System.out.println("Enter interest rate"); //loan: interest_rate
@@ -191,7 +258,7 @@ public class jawaSkripFinance {
                         payment_per_period = total_repayment / (repayment_period * 12);
                         System.out.println("You need to pay RM" + payment_per_period + " per month");
 
-                        String updateSQL = "INSERT TO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                        String updateSQL = "INSERT INTO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                         try (Connection connection = DatabaseUtil.getConnection();
                         PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
 
@@ -277,14 +344,66 @@ public class jawaSkripFinance {
                 }
 
                 System.out.printf("Please pay the following amount: RM%.2f%n", payment_per_period);
-                System.out.println("Enter amount you want to pay(amount will be credited out of your account):");
+                System.out.println("Enter amount you want to pay:");
 
-                // finsih repayment here
+                double payment = input.nextDouble();
+
+                String insertSQL3 = "INSERT INTO loan_repayment (loan_id, payment_amount, payment_date, total_amount_paid) VALUES (?, ?, ?, ?)";
+                String updateSQL4 = "UPDATE loan SET total_amount_paid = total_amount_paid + ? WHERE loan_id = ?";
+                String updateSQL5 = "UPDATE loan_repayment SET remaining_amount = ? WHERE loan_id = ?";
+
+                try (Connection connection = DatabaseUtil.getConnection();
+                    PreparedStatement preparedStatement = connection.prepareStatement(insertSQL3);
+                    PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL4);
+                    PreparedStatement preparedStatement3 = connection.prepareStatement(updateSQL5)) {
+
+                    // Set parameters for the query
+                    preparedStatement.setInt(1, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+                    preparedStatement.setDouble(2, payment);
+                    preparedStatement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    preparedStatement.setDouble(4, getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
+                    int rowsAffected = preparedStatement.executeUpdate();
+
+                    preparedStatement2.setDouble(1, payment);
+                    preparedStatement2.setDouble(2, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+                    int rowsAffected2 = preparedStatement2.executeUpdate();
+
+                    preparedStatement3.setDouble(1, getTotalRepaymentFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))) - getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
+                    preparedStatement3.setDouble(2, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+                    int rowsAffected3 = preparedStatement3.executeUpdate();
+
+                    if (rowsAffected > 0 && rowsAffected2 > 0 && rowsAffected3 > 0) {
+                        System.out.println("Repayment successful.");
+                        // Check if loan is fully repaid
+                        if (getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))) >= getTotalRepaymentFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)))) {
+                            String updateSQL6 = "UPDATE loan SET loan_status = 'Paid' WHERE loan_id = ?";
+                            try (PreparedStatement preparedStatement4 = connection.prepareStatement(updateSQL6)) {
+                                preparedStatement4.setInt(1, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+                                int rowsAffected4 = preparedStatement4.executeUpdate();
+                                if (rowsAffected4 > 0) {
+                                    System.out.println("Loan fully repaid.");
+                                } else {
+                                    System.out.println("Error updating loan status.");
+                                }
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                    } else {
+                        System.out.println("Repayment failed.");
+                    }
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
 
                 break;
             default:
                 System.out.println("Error: Invalid choice.");
         }
+        input.close();
     }
 
     public static void depositInterestPredictor() {
@@ -301,82 +420,7 @@ public class jawaSkripFinance {
         for (Map.Entry<String, Double> entry : totalInterest.entrySet()) {
             System.out.printf("%s: RM %.2f%n", entry.getKey(), entry.getValue());
         }
-    }
-
-
-
-/*
-    public static void main(String[] args) {
-        Scanner input = new Scanner(System.in);
-        int x = 0, Cl = 0, schedule_pay = 0, exit = 1;
-        double principal_amount, interest_rate, repayment_period, deposit_period, deposit_amount;
-        double total_repayment = 0, payment_per_period = 0;
-
-        do {
-            System.out.println("1. Credit loan\n2. Deposit Interest Predictor");
-            x = input.nextInt();
-            switch (x) {
-                case 1:
-                    System.out.println("1. Apply\n2. Repay");
-                    Cl = input.nextInt();
-
-                    switch (Cl) {
-                        case 1:
-                            System.out.println("Enter principal amount"); //loan: principal_amount 
-                            principal_amount = input.nextDouble();
-                            System.out.println("Enter interest rate"); //loan: interest_rate
-                            interest_rate = input.nextDouble();
-                            System.out.println("Enter repayment period (in years)");
-                            repayment_period = input.nextDouble();
-                            total_repayment = calculateTotalRepayment(principal_amount, interest_rate, repayment_period);
-                            System.out.println("The total repayment value is RM" + total_repayment);
-
-                            System.out.println("Do you want to schedule payment monthly (1) or quarterly (2)?");
-                            schedule_pay = input.nextInt();
-                            switch (schedule_pay) {
-                                case 1:
-                                    payment_per_period = total_repayment / (repayment_period * 12);
-                                    System.out.println("You need to pay RM" + payment_per_period + " per month");
-                                    break;
-                                case 2:
-                                    payment_per_period = total_repayment / (repayment_period * 4);
-                                    System.out.println("You need to pay RM" + payment_per_period + " per quarter");
-                                    break;
-                                default:
-                                    System.out.println("Error: Invalid choice.");
-                            }
-                            break;
-
-                        case 2:
-                            System.out.printf("Please pay the following amount: RM%.2f%n", payment_per_period);
-                            break;
-                        default:
-                            System.out.println("Error: Invalid choice.");
-                    }
-                    break;
-
-                case 2:
-                    System.out.println("Enter deposit amount:");
-                    deposit_amount = input.nextDouble();
-                    System.out.println("Enter deposit period (in years):");
-                    deposit_period = input.nextDouble();
-
-                    Map<String, Double> totalInterest = calculateDepositInterest(deposit_amount, deposit_period);
-
-                    System.out.println("Deposit Interest Prediction:");
-                    for (Map.Entry<String, Double> entry : totalInterest.entrySet()) {
-                        System.out.printf("%s: RM %.2f%n", entry.getKey(), entry.getValue());
-                    }
-                    break;
-
-                default:
-                    System.out.println("Error: Invalid choice.");
-            }
-            System.out.println("Press 0 to exit system, press any other key to continue");
-            exit = input.nextInt();
-        } while (exit != 0);
-
         input.close();
     }
-*/
+
 }

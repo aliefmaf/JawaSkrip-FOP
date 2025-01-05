@@ -36,15 +36,17 @@ public class App {
             System.out.printf("Account balance: %.2f\n", CDSR.balance);
 
             System.out.println("==Transactions==");
-            System.out.println("1.Credit \n2.Debit\n3.Savings\n4.Quit\n");
+            System.out.println("1.Credit \n2.Debit\n3.Savings\n4.Credit Loan\n5.Deposit Interest Predictor\n6.Exit");
 
             choice = sc.nextInt();
 
             switch(choice){
                 case 1:
+                if (!CDSR.compareDates(jawaSkripFinance.getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)))) break;
                 CDSR.credit();
                 break;
                 case 2:
+                if (!CDSR.compareDates(jawaSkripFinance.getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)))) break;
                 CDSR.debit();
                 break;
                 case 3:
@@ -64,10 +66,6 @@ public class App {
             }
 
         }
-
-        
-
-
         sc.close();  // Close the scanner object
     }
 

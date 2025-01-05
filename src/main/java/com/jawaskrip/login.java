@@ -71,37 +71,36 @@ public class login {
             if (username.equals("!")){
                 break; 
             }
+            else {
+                System.out.print("Enter your password: ");
+                String password = scanner.nextLine();
 
-            else{
-            System.out.print("Enter your password: ");
-            String password = scanner.nextLine();
+                // Hash the entered password to compare with the stored hash
+                String hashedPassword = hashPassword(password);
 
-            // Hash the entered password to compare with the stored hash
-            String hashedPassword = hashPassword(password);
+                String selectQuery = "SELECT * FROM profile WHERE username = ? AND password = ?";
 
-            String selectQuery = "SELECT * FROM profile WHERE username = ? AND password = ?";
+                try (Connection connection = DatabaseUtil.getConnection();
+                    PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
 
-            try (Connection connection = DatabaseUtil.getConnection();
-                 PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
+                    // Set parameters for the query
+                    preparedStatement.setString(1, username);
+                    preparedStatement.setString(2, hashedPassword);
 
-                // Set parameters for the query
-                preparedStatement.setString(1, username);
-                preparedStatement.setString(2, hashedPassword);
+                    // Execute the query
+                    ResultSet resultSet = preparedStatement.executeQuery();
 
-                // Execute the query
-                ResultSet resultSet = preparedStatement.executeQuery();
+                    if (resultSet.next()) {
+                        System.out.println("Login successful! Welcome, " + username + "!");
+                        success = true; // Login successful, exit loop
+                    } else {
+                        System.out.println("Invalid username or password. Please try again.");
+                    }
 
-                if (resultSet.next()) {
-                    System.out.println("Login successful! Welcome, " + username + "!");
-                    success = true; // Login successful, exit loop
-                } else {
-                    System.out.println("Invalid username or password. Please try again.");
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
-        }
         }
     }
 
