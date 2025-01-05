@@ -36,7 +36,7 @@ public class App {
             System.out.printf("Account balance: %.2f\n", CDSR.balance);
 
             System.out.println("==Transactions==");
-            System.out.println("1.Credit \n2.Debit\n3.Savings\n4.Credit Loan\n5.Deposit Interest Predictor\n6.Exit");
+            System.out.println("1.Credit \n2.Debit\n3.Savings\n4.Credit Loan\n5.Deposit Interest Predictor\n6.Spending Trends\n7.Saving growth\n8.Loan Repayment\n9.Exit");
 
             choice = sc.nextInt();
 
@@ -57,7 +57,17 @@ public class App {
                 break;
                 case 5:
                 jawaSkripFinance.depositInterestPredictor();
+                break;
                 case 6:
+                jawaSkripFinance.spendingTrends();
+                break;
+                case 7:
+                jawaSkripFinance.savingGrowth();
+                break;
+                case 8:
+                jawaSkripFinance.loanRepayment();
+                break;
+                case 9:
                 truth=false;
                 break;
                 default:
