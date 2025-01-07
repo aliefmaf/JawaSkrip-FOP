@@ -213,7 +213,6 @@ public class CDSR {
             System.out.println("Transaction failed \n");
         }
 
-        scan.close();
     }
             
     public static void debit() {
@@ -303,7 +302,6 @@ public class CDSR {
             System.out.println("Transaction failed \n");
         }
         System.out.println(balance);
-        scan.close();
     }
 
     public static void Savings(){

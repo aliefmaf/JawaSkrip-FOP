@@ -1,5 +1,6 @@
 package com.jawaskrip;
 
+
 import java.util.Scanner;
 
 public class App {
@@ -59,13 +60,13 @@ public class App {
                 jawaSkripFinance.depositInterestPredictor();
                 break;
                 case 6:
-                jawaSkripFinance.spendingTrends();
+                //jawaSkripFinance.spendingTrends();
                 break;
                 case 7:
-                jawaSkripFinance.savingGrowth();
+                //jawaSkripFinance.savingGrowth();
                 break;
                 case 8:
-                jawaSkripFinance.loanRepayment();
+                //jawaSkripFinance.loanRepayment();
                 break;
                 case 9:
                 truth=false;
@@ -80,3 +81,5 @@ public class App {
     }
 
 }
+
+

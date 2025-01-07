@@ -4,13 +4,24 @@
   <groupId>com.jawaskrip</groupId>
   <artifactId>alief-database</artifactId>
   <packaging>pom</packaging>
-  <modules>
-    <module>db-auth</module>
-  </modules>
+
   <version>1.0-SNAPSHOT</version>
   <name>alief-database</name>
   <url>http://maven.apache.org</url>
+
+ <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <javafx.version>21</javafx.version>
+    <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+  </properties>
+
   <dependencies>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -24,13 +35,24 @@
         <version>42.6.0</version> <!-- Use the latest version -->
     </dependency>
   </dependencies>
-  <build>
+
+<build>
     <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.0.0</version>
-      </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>java</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <mainClass>com.jawaskrip.App</mainClass>
+            </configuration>
+        </plugin>
     </plugins>
   </build>
 </project>
