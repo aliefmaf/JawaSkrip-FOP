@@ -25,11 +25,11 @@ public class LedgerSystem {
     }
 
     public static void savingGrowth() {
-        Platform.runLater(() -> displayGraph("Saving Growth", createSavingsGrowthSeries(userId)));
+        Platform.runLater(() -> displayGraph("Saving Growth", createSavingsGrowthSeries()));
     }
 
     public static void loanRepayment() {
-        Platform.runLater(() -> displayGraph("Loan Repayment", createLoanRepaymentsSeries(userId)));
+        Platform.runLater(() -> displayGraph("Loan Repayment", createLoanRepaymentsSeries()));
     }
 
     private static void displayGraph(String title, XYChart.Series<String, Number> series) {
@@ -51,13 +51,13 @@ public class LedgerSystem {
         return dataVisualizer.getSpendingTrends();
     }
 
-    private static XYChart.Series<String, Number> createSavingsGrowthSeries(int userId) {
+    private static XYChart.Series<String, Number> createSavingsGrowthSeries() {
         DataVisualizer dataVisualizer = new DataVisualizer();
-        return dataVisualizer.getSavingsGrowth(userId);
+        return dataVisualizer.getSavingsGrowth();
     }
 
-    private static XYChart.Series<String, Number> createLoanRepaymentsSeries(int userId) {
+    private static XYChart.Series<String, Number> createLoanRepaymentsSeries() {
         DataVisualizer dataVisualizer = new DataVisualizer();
-        return dataVisualizer.getLoanRepayments(userId);
+        return dataVisualizer.getLoanRepayments();
     }
 }

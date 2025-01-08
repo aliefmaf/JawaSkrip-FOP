@@ -47,7 +47,7 @@ public class App extends Application {
 
 
         boolean truth = true;
-        while(truth== true){
+        while(truth){
             System.out.printf("Account balance: %.2f\n", CDSR.balance);
 
             System.out.println("==Transactions==");

@@ -54,7 +54,6 @@ public class CDSR {
 
     }
 
-    
     public static int getUserIDFromUsername(String username) {
         String query = "SELECT user_id FROM profile WHERE username = ?";
         try (Connection connection = DatabaseUtil.getConnection();
@@ -76,6 +75,26 @@ public class CDSR {
     }
 
 
+    public static int getSavingsIDFromUserID(int userID) {
+        String query = "SELECT savings_id FROM savings WHERE user_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, userID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getInt("savings_id"); // Retrieve savings_id
+            } else {
+                System.out.println("No savings_id found for user: " + userID);
+                return -1;  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving savings_id: " + e.getMessage());
+            return -1;
+        }
+    }
+
     public static boolean getSvgStatusFromUserID(int UserID) {
         String query = "SELECT svg_status FROM savings WHERE user_id = ?";
         try (Connection connection = DatabaseUtil.getConnection();
@@ -96,7 +115,6 @@ public class CDSR {
         }
     }
 
-
     public static int getSvgPercentageFromUserID(int UserID) {
         String query = "SELECT svg_percentage FROM savings WHERE user_id = ?";
         try (Connection connection = DatabaseUtil.getConnection();
@@ -116,6 +134,7 @@ public class CDSR {
             return -1;
         }
     }
+
 
     public static boolean compareDates(int loanID) {
         String query = "SELECT end_date FROM loan WHERE loan_id = ?";
@@ -158,7 +177,7 @@ public class CDSR {
 
         System.out.println("==Credit==");
         Scanner scan = new Scanner(System.in);
-        System.out.print("Enter amount : ");
+        System.out.print("Enter amount: ");
         double cre = scan.nextDouble();
         scan.nextLine();
 
@@ -223,7 +242,7 @@ public class CDSR {
         String desc = "";
         System.out.println("==Debit==");
         Scanner scan = new Scanner(System.in);
-
+        System.out.print("Enter amount: ");
         double deb = scan.nextDouble();
         scan.nextLine();
 
@@ -231,18 +250,26 @@ public class CDSR {
             extra = (save/100.0)*deb;
             
             String updateSQL = "UPDATE savings SET svg_amount = svg_amount + ? WHERE user_id = ?";
+            String insertSQL = "INSERT INTO savings_transaction (savings_id, amount_saved, transaction_date, transaction_date_only) VALUES (?, ?, ?, ?)";
             try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
-                PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
+                PreparedStatement preparedStatement = connection.prepareStatement(updateSQL);
+                PreparedStatement preparedStatement2 = connection.prepareStatement(insertSQL)) {
     
                 // Set the parameters for the SQL query
                 preparedStatement.setDouble(1, extra); // Set the new balance
                 preparedStatement.setInt(2, getUserIDFromUsername(login.username));     // Set the account ID
-    
                 // Execute the update query
                 int rowsAffected = preparedStatement.executeUpdate(); // Returns the number of rows affected
     
-                if (rowsAffected > 0) {
-                    System.out.println("Savings updated successfully.");
+                preparedStatement2.setInt(1, getSavingsIDFromUserID(getUserIDFromUsername(login.username)));
+                preparedStatement2.setDouble(2, extra);
+                preparedStatement2.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                preparedStatement2.setDate(4, Date.valueOf(LocalDate.now()));
+
+                int rowsAffected2 = preparedStatement2.executeUpdate(); // Returns the number of rows affected
+
+                if (rowsAffected > 0 && rowsAffected2 > 0) {
+                    //System.out.println("Savings updated successfully.");
                 } else {
                     System.out.println("Failed to update savings.");
                 }

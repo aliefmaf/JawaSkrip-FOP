@@ -1,5 +1,7 @@
 package com.jawaskrip;
 import javafx.scene.chart.XYChart;
+import java.util.Map;
+import java.util.HashMap;
 import java.sql.*;
 
 public class DataVisualizer {
@@ -16,12 +18,16 @@ public class DataVisualizer {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
+            Map<String, Double> dateToAmountMap = new HashMap<>();
             while (resultSet.next()) {
-                String category = resultSet.getString("transaction_date_only");
-                double totalAmount = resultSet.getDouble("amount_transacted");
-                
+            String date = resultSet.getString("transaction_date_only");
+            double amount = resultSet.getDouble("amount_transacted");
 
-                spendingData.getData().add(new XYChart.Data<>(category, totalAmount));
+            dateToAmountMap.put(date, dateToAmountMap.getOrDefault(date, 0.0) + amount);
+            }
+
+            for (Map.Entry<String, Double> entry : dateToAmountMap.entrySet()) {
+                spendingData.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
             }
 
         } catch (SQLException e) {
@@ -30,42 +36,48 @@ public class DataVisualizer {
         return spendingData;
     }
 
-
-
-    public XYChart.Series<String, Number> getSavingsGrowth(int userId) {
+    public XYChart.Series<String, Number> getSavingsGrowth() {
         XYChart.Series<String, Number> savingsData = new XYChart.Series<>();
-        savingsData.setName("Savings Growth for User: " + userId);
-        String query = "SELECT DATE_FORMAT(date, '%Y-%m') AS month, SUM(amount) AS total_savings " +
-                       "FROM transactions WHERE user_id = ? AND transaction_type = 'savings' GROUP BY month";
+        savingsData.setName("Savings Growth");
+        String query = "SELECT amount_saved, transaction_date_only FROM savings_transaction WHERE savings_id = ? ORDER BY transaction_date_only";
         try (Connection connection = DatabaseUtil.getConnection(); 
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setInt(1, userId);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    String month = resultSet.getString("month");
-                    double totalSavings = resultSet.getDouble("total_savings");
-                    savingsData.getData().add(new XYChart.Data<>(month, totalSavings));
-                }
+            preparedStatement.setInt(1, CDSR.getSavingsIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            Map<String, Double> dateToAmountMap = new HashMap<>();
+            while (resultSet.next()) {
+            String date = resultSet.getString("transaction_date_only");
+            double amount = resultSet.getDouble("amount_saved");
+
+            dateToAmountMap.put(date, dateToAmountMap.getOrDefault(date, 0.0) + amount);
             }
+
+            for (Map.Entry<String, Double> entry : dateToAmountMap.entrySet()) {
+                savingsData.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+            }
+
         } catch (SQLException e) {
             System.err.println("Database error while fetching savings growth: " + e.getMessage());
         }
         return savingsData;
     }
 
-    public XYChart.Series<String, Number> getLoanRepayments(int userId) {
+    public XYChart.Series<String, Number> getLoanRepayments() {
         XYChart.Series<String, Number> loanData = new XYChart.Series<>();
-        loanData.setName("Loan Repayments for User: " + userId);
-        String query = "SELECT DATE_FORMAT(date, '%Y-%m') AS month, SUM(amount) AS total_repayment " +
-                       "FROM transactions WHERE user_id = ? AND transaction_type = 'loan' GROUP BY month";
+        loanData.setName("Loan Repayments");
+        String query = "SELECT total_amount_paid FROM loan WHERE loan_id = ?";
+        
         try (Connection connection = DatabaseUtil.getConnection(); 
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setInt(1, userId);
+            preparedStatement.setInt(1, jawaSkripFinance.getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                int i=1;
                 while (resultSet.next()) {
-                    String month = resultSet.getString("month");
-                    double totalRepayment = resultSet.getDouble("total_repayment");
-                    loanData.getData().add(new XYChart.Data<>(month, totalRepayment));
+                    double totalRepayment = resultSet.getDouble("total_amount_paid");
+                    loanData.getData().add(new XYChart.Data<>(String.valueOf(i), totalRepayment));
+                    i++;
                 }
             }
         } catch (SQLException e) {
