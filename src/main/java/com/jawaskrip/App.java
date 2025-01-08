@@ -3,9 +3,25 @@ package com.jawaskrip;
 
 import java.util.Scanner;
 
-public class App {
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
+public class App extends Application {
+
+    @Override
+    public void start(Stage primaryStage) {
+        // left empty
+    }
+
 
     public static void main(String[] args) {
+
+        new Thread(() -> Application.launch(App.class)).start();
+
+
         Scanner sc = new Scanner(System.in);
         int choice;
 
@@ -28,8 +44,6 @@ public class App {
                 break; 
             }
         } while (choice != 1);
-
-
 
 
         boolean truth = true;
@@ -60,13 +74,13 @@ public class App {
                 jawaSkripFinance.depositInterestPredictor();
                 break;
                 case 6:
-                //jawaSkripFinance.spendingTrends();
+                LedgerSystem.spendingTrends();
                 break;
                 case 7:
-                //jawaSkripFinance.savingGrowth();
+                LedgerSystem.savingGrowth();
                 break;
                 case 8:
-                //jawaSkripFinance.loanRepayment();
+                LedgerSystem.loanRepayment();
                 break;
                 case 9:
                 truth=false;
@@ -79,7 +93,7 @@ public class App {
         }
         sc.close();  // Close the scanner object
     }
-
+    
 }
 
 

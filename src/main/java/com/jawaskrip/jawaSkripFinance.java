@@ -403,7 +403,6 @@ public class jawaSkripFinance {
             default:
                 System.out.println("Error: Invalid choice.");
         }
-        input.close();
     }
 
     public static void depositInterestPredictor() {
@@ -420,7 +419,6 @@ public class jawaSkripFinance {
         for (Map.Entry<String, Double> entry : totalInterest.entrySet()) {
             System.out.printf("%s: RM %.2f%n", entry.getKey(), entry.getValue());
         }
-        input.close();
     }
 
 }

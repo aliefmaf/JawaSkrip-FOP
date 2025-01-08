@@ -179,7 +179,7 @@ public class CDSR {
             System.out.println("Credit successfully recorded !! \n");
 
             String updateSQL = "UPDATE account SET acc_amount = ? WHERE account_id = ?";
-            String updateSQL2 = "INSERT INTO transaction (account_id, amount_transacted, transaction_type, transaction_date, description) VALUES (?, ?, ?, ?, ?)";
+            String updateSQL2 = "INSERT INTO transaction (account_id, amount_transacted, transaction_type, transaction_date, description, transaction_date_only) VALUES (?, ?, ?, ?, ?, ?)";
             try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
                 PreparedStatement preparedStatement = connection.prepareStatement(updateSQL);
                 PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL2)) {
@@ -196,6 +196,8 @@ public class CDSR {
                 preparedStatement2.setString(3, "Credit");
                 preparedStatement2.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 preparedStatement2.setString(5, desc);
+                preparedStatement2.setDate(6, Date.valueOf(LocalDate.now()));
+
 
                 int rowsAffected2 = preparedStatement2.executeUpdate(); // Returns the number of rows affected
 
@@ -221,7 +223,7 @@ public class CDSR {
         String desc = "";
         System.out.println("==Debit==");
         Scanner scan = new Scanner(System.in);
-        System.out.print("Enter amount : ");
+
         double deb = scan.nextDouble();
         scan.nextLine();
 
@@ -268,7 +270,7 @@ public class CDSR {
 
 
             String updateSQL = "UPDATE account SET acc_amount = ? WHERE account_id = ?";
-            String updateSQL2 = "INSERT INTO transaction (account_id, amount_transacted, transaction_type, transaction_date, description) VALUES (?, ?, ?, ?, ?)";
+            String updateSQL2 = "INSERT INTO transaction (account_id, amount_transacted, transaction_type, transaction_date, description, transaction_date_only) VALUES (?, ?, ?, ?, ?, ?)";
             try (Connection connection = DatabaseUtil.getConnection();  // Automatically closes the connection
                  PreparedStatement preparedStatement = connection.prepareStatement(updateSQL);
                  PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL2)) {
@@ -284,6 +286,7 @@ public class CDSR {
                 preparedStatement2.setString(3, "Debit");
                 preparedStatement2.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 preparedStatement2.setString(5, desc);
+                preparedStatement2.setDate(6, Date.valueOf(LocalDate.now()));
 
                 int rowsAffected2 = preparedStatement2.executeUpdate(); // Returns the number of rows affected
     
@@ -343,7 +346,6 @@ public class CDSR {
                 return;
             }
         }
-        scan.close();
     }
 
 
