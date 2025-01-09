@@ -1,121 +1,4 @@
 package com.jawaskrip;
-/*
-import java.util.Map;
-import java.util.Scanner;
-import java.util.HashMap;
-import java.util.Map;
-
-public class jawaSkripFinance{
-    public static double calculateTotalRepayment(double principalAmount, double annualInterestRate, double repaymentPeriod) {
-        // Convert annual interest rate from percentage to decimal
-        double monthlyInterestRate = (annualInterestRate / 100) / 12;
-
-        // Convert repayment period to months
-        double totalMonths = repaymentPeriod * 12;
-
-        // Calculate monthly payment using the formula for an amortizing loan
-        double monthlyPayment = 
-            (principalAmount * monthlyInterestRate) / 
-            (1 - Math.pow(1 + monthlyInterestRate, -totalMonths));
-
-        // Calculate total repayment amount
-        double totalRepayment = monthlyPayment * totalMonths;
-        return totalRepayment;
-    }
-
-    public static Map<String, Double> predictMonthlyInterest(double deposit) {
-        // Bank interest rates based on the table
-        Map<String, Double> bankInterestRates = new HashMap<>();
-        bankInterestRates.put("RHB", 2.6);
-        bankInterestRates.put("Maybank", 2.5);
-        bankInterestRates.put("Hong Leong", 2.3);
-        bankInterestRates.put("Alliance", 2.85);
-        bankInterestRates.put("AmBank", 2.55);
-        bankInterestRates.put("Standard Chartered", 2.65);
-
-        // Map to store monthly interest earned by each bank
-        Map<String, Double> monthlyInterestMap = new HashMap<>();
-
-        for (Map.Entry<String, Double> entry : bankInterestRates.entrySet()) {
-            String bankName = entry.getKey();
-            double interestRate = entry.getValue();
-            // Calculate monthly interest
-            double monthlyInterest = (deposit * interestRate) / 12 / 100; // Convert % to decimal
-            monthlyInterestMap.put(bankName, monthlyInterest);
-        }
-
-        return monthlyInterestMap;
-    }
-
-    public static void main(String[] args) {
-        Scanner input = new Scanner(System.in);
-        int x = 0, Cl = 0, schedule_pay = 0, exit = 1;
-        double principal_amount, interest_rate, repayment_period, total_repayment=0, payment_per_period=0;
-        do{
-            System.out.println("Click 1 for credit loan, 2 for Deposit Interest Predictor");
-            x = input.nextInt();
-            switch(x){
-            
-                case 1:
-                    System.out.println("Click 1 to apply, 2 to repay");
-                    Cl = input.nextInt();
-
-                    switch(Cl){
-                        case 1:
-                            System.out.println("Enter principal amount");
-                            principal_amount = input.nextDouble();
-                            System.out.println("Enter interest rate");
-                            interest_rate = input.nextDouble();
-                            System.out.println("Enter repayment period");
-                            repayment_period = input.nextDouble();
-                            total_repayment = calculateTotalRepayment(principal_amount, interest_rate, repayment_period);
-                            System.out.println("The total repayment value is RM" + total_repayment);
-
-                            System.out.println("Do you want to schedule payment monthly (1) or quarternerly (2) ?");
-                            schedule_pay = input.nextInt();
-
-                            switch(schedule_pay){
-                                case 1:
-                                    payment_per_period = total_repayment / (repayment_period * 12);
-                                    System.out.println("You need to pay RM"+ payment_per_period + " per month ");
-                                    break;
-                                case 2: 
-                                    payment_per_period = total_repayment / (repayment_period * 4);
-                                    System.out.println("You need to pay RM"+ payment_per_period + " per quarter ");
-                                    break;
-                                default:
-                                    System.out.println("Error");
-                            }
-                            break;
-
-                        case 2 :
-                            System.out.printf("Please pay the following amount: RM%.2f", payment_per_period);
-                            break;
-                        default : 
-                            System.out.println("Error");
-                    break;
-                }
-
-                case 2:
-                    Map<String, Double> monthlyInterest = predictMonthlyInterest(total_repayment);
-
-                    System.out.println("Monthly Interest Prediction:");
-                    for (Map.Entry<String, Double> entry : monthlyInterest.entrySet()) {
-                    System.out.printf("%s: RM %.2f%n", entry.getKey(), entry.getValue());
-                    }
-                    break;
-                default:
-                    System.out.println("Error");
-            }
-            System.out.println("Press 0 to exit system, press other keys to continue");
-            exit = input.nextInt();
-        }while(exit!=0);
-    input.close();
-}
-}
-*/
-
-
 
 import java.util.Map;
 import java.util.Scanner;
@@ -258,7 +141,7 @@ public class jawaSkripFinance {
                         payment_per_period = total_repayment / (repayment_period * 12);
                         System.out.println("You need to pay RM" + payment_per_period + " per month");
 
-                        String updateSQL = "INSERT INTO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                        String updateSQL = "INSERT INTO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date, pay_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                         try (Connection connection = DatabaseUtil.getConnection();
                         PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
 
@@ -271,7 +154,7 @@ public class jawaSkripFinance {
                         preparedStatement.setDouble(6, total_repayment);
                         preparedStatement.setDate(7, Date.valueOf(LocalDate.now()));
                         preparedStatement.setDate(8, Date.valueOf(LocalDate.now().plusMonths((long) (repayment_period * 12))));
-
+                        preparedStatement.setString(9, "Monthly");
                         // Execute the query
                         int rowsAffected = preparedStatement.executeUpdate();
 
@@ -290,7 +173,7 @@ public class jawaSkripFinance {
                         payment_per_period = total_repayment / (repayment_period * 4);
                         System.out.println("You need to pay RM" + payment_per_period + " per quarter");
 
-                        String updateSQL2 = "INSERT TO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                        String updateSQL2 = "INSERT TO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date, pay_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                         try (Connection connection = DatabaseUtil.getConnection();
                         PreparedStatement preparedStatement = connection.prepareStatement(updateSQL2)) {
 
@@ -303,6 +186,7 @@ public class jawaSkripFinance {
                         preparedStatement.setDouble(6, total_repayment);
                         preparedStatement.setDate(7, Date.valueOf(LocalDate.now()));
                         preparedStatement.setDate(8, Date.valueOf(LocalDate.now().plusMonths((long) (repayment_period * 12))));
+                        preparedStatement.setString(9, "Quarterly");
 
                         // Execute the query
                         int rowsAffected = preparedStatement.executeUpdate();
@@ -349,13 +233,11 @@ public class jawaSkripFinance {
                 double payment = input.nextDouble();
 
                 String insertSQL3 = "INSERT INTO loan_repayment (loan_id, payment_amount, payment_date, total_amount_paid) VALUES (?, ?, ?, ?)";
-                String updateSQL4 = "UPDATE loan SET total_amount_paid = total_amount_paid + ? WHERE loan_id = ?";
-                String updateSQL5 = "UPDATE loan_repayment SET remaining_amount = ? WHERE loan_id = ?";
+                String updateSQL4 = "UPDATE loan SET remaining_amount = ?, total_amount_paid = total_amount_paid + ? WHERE loan_id = ?";
 
                 try (Connection connection = DatabaseUtil.getConnection();
                     PreparedStatement preparedStatement = connection.prepareStatement(insertSQL3);
-                    PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL4);
-                    PreparedStatement preparedStatement3 = connection.prepareStatement(updateSQL5)) {
+                    PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL4)) {
 
                     // Set parameters for the query
                     preparedStatement.setInt(1, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
@@ -364,15 +246,12 @@ public class jawaSkripFinance {
                     preparedStatement.setDouble(4, getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
                     int rowsAffected = preparedStatement.executeUpdate();
 
-                    preparedStatement2.setDouble(1, payment);
-                    preparedStatement2.setDouble(2, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+                    preparedStatement2.setDouble(1, getTotalRepaymentFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))) - getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
+                    preparedStatement2.setDouble(2, payment);
+                    preparedStatement2.setDouble(3, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
                     int rowsAffected2 = preparedStatement2.executeUpdate();
 
-                    preparedStatement3.setDouble(1, getTotalRepaymentFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))) - getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
-                    preparedStatement3.setDouble(2, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
-                    int rowsAffected3 = preparedStatement3.executeUpdate();
-
-                    if (rowsAffected > 0 && rowsAffected2 > 0 && rowsAffected3 > 0) {
+                    if (rowsAffected > 0 && rowsAffected2 > 0) {
                         System.out.println("Repayment successful.");
                         // Check if loan is fully repaid
                         if (getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))) >= getTotalRepaymentFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)))) {
@@ -420,5 +299,7 @@ public class jawaSkripFinance {
             System.out.printf("%s: RM %.2f%n", entry.getKey(), entry.getValue());
         }
     }
+
+
 
 }

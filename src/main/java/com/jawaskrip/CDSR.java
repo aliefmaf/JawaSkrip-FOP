@@ -8,11 +8,15 @@ import java.util.Scanner;
 public class CDSR {
 
     static double balance=getBalanceFromUsername(login.username);
+    static double savingBalance = getSavingsBalanceFromUserID(getUserIDFromUsername(login.username));
+    static double loanBalance = getLoanBalanceFromLoanID(jawaSkripFinance.getLoanIDFromUserID(getUserIDFromUsername(login.username)));
+
     static boolean svngs = getSvgStatusFromUserID(getUserIDFromUsername(login.username));
+
     static int save = getSvgPercentageFromUserID(getUserIDFromUsername(login.username));
     
     
-    public static int getBalanceFromUsername(String username) {
+    public static double getBalanceFromUsername(String username) {
         String query = "SELECT a.acc_amount FROM profile p JOIN account a ON p.user_id = a.user_id WHERE p.username = ?";
         try (Connection connection = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -21,10 +25,10 @@ public class CDSR {
             ResultSet resultSet = preparedStatement.executeQuery();
             
             if (resultSet.next()) {
-                return resultSet.getInt("acc_amount"); // Retrieve account_id
+                return resultSet.getDouble("acc_amount"); // Retrieve account_id
             } else {
                 System.out.println("No account found for username: " + username);
-                return -1;  // Invalid account if no match is found
+                return 0;  // Invalid account if no match is found
             }
         } catch (SQLException e) {
             System.out.println("Error retrieving account ID: " + e.getMessage());
@@ -32,6 +36,43 @@ public class CDSR {
         }
     }
 
+    public static double getSavingsBalanceFromUserID(int userID) {
+        String query = "SELECT svg_amount FROM savings WHERE user_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, userID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getDouble("svg_amount"); 
+            } else {
+                return 0;  // Invalid account if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving savings balance: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    public static double getLoanBalanceFromLoanID(int loanID) {
+        String query = "SELECT remaining_amount FROM loan_repayment WHERE loan_id = ?";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, loanID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                return resultSet.getDouble("remaining_amount"); 
+            } else {
+                return 0;  // Invalid account if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving loan balance: " + e.getMessage());
+            return -1;
+        }
+    }
 
     public static int getAccountIdFromUsername(String username) {
         String query = "SELECT a.account_id FROM profile p JOIN account a ON p.user_id = a.user_id WHERE p.username = ?";
@@ -331,7 +372,6 @@ public class CDSR {
         else{
             System.out.println("Transaction failed \n");
         }
-        System.out.println(balance);
     }
 
     public static void Savings(){
@@ -375,5 +415,97 @@ public class CDSR {
         }
     }
 
+
+    public static void history(){
+        Scanner scan = new Scanner(System.in);
+        boolean repeat=true;
+        int choice=0;
+
+        String query = "SELECT amount_transacted, transaction_type, transaction_date, description FROM transaction WHERE account_id = ?";
+        while(repeat){
+            try (Connection connection = DatabaseUtil.getConnection();
+                PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+                // Set the parameter for the SQL query
+                preparedStatement.setInt(1, getAccountIdFromUsername(login.username));
+                
+                // Execute the query
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                // Display header
+                System.out.println("=====================================");
+                System.out.println("  Transactions for " + login.username);
+                System.out.println("=====================================");
+                System.out.printf("| %-4s | %-10s | %-8s | %-25s | %-21s |%n", 
+                                "ID", "Amount", "Type", "Description", "Date");
+                System.out.println("---------------------------------------------------------------");
+
+                // Check if there are any results
+                boolean hasTransactions = false;
+
+                // Iterate through results and display them
+                int id = 1;
+                while (resultSet.next()) {
+                    hasTransactions = true;
+                    int amount = resultSet.getInt("amount_transacted");
+                    String type = resultSet.getString("transaction_type");
+                    String description = resultSet.getString("description");
+                    Timestamp date = resultSet.getTimestamp("transaction_date");
+
+                    // Print transaction details in a tabular format
+                    System.out.printf("| %-4s | %-10s | %-8s | %-25s | %-21s |%n",
+                                    id, amount, type, description, date);
+                    id++;
+                }
+
+                // If no transactions were found
+                if (!hasTransactions) {
+                    System.out.println("| No transactions found for this user.                       |");
+                    repeat=false;
+                }
+
+                // Footer
+                System.out.println("=====================================");
+
+                System.out.println("Filtering option\n1.Date range\n2.Amount range\n3.Transaction type\n==================\nSorting option\n4.Sort by amount\n5.Sort by date\n0.Exit");
+                choice = scan.nextInt();
+                scan.nextLine();
+                
+                switch(choice){
+                    case 1:
+                    System.out.print("Enter start date (yyyy-mm-dd): ");
+                    String startDate = scan.nextLine();
+                    System.out.print("Enter end date (yyyy-mm-dd): ");
+                    String endDate = scan.nextLine();
+                    query = "SELECT amount_transacted, transaction_type, transaction_date, description FROM transaction WHERE account_id = ? AND transaction_date_only BETWEEN '" + startDate +"' AND '" + endDate +"' ORDER BY transaction_date";
+                    break;
+                    case 2:
+                    System.out.print("Enter start amount: ");
+                    int startAmount = scan.nextInt();
+                    System.out.print("Enter end amount: ");
+                    int endAmount = scan.nextInt();
+                    query = "SELECT amount_transacted, transaction_type, transaction_date, description FROM transaction WHERE account_id = ? AND amount_transacted BETWEEN " + startAmount +" AND " + endAmount +" ORDER BY amount_transacted";
+                    break;
+                    case 3:
+                    System.out.print("Enter transaction type (Credit/Debit): ");
+                    String transType = scan.nextLine();
+                    query = "SELECT amount_transacted, transaction_type, transaction_date, description FROM transaction WHERE account_id = ? AND transaction_type = '"+ transType +"' ORDER BY transaction_date";
+                    break;
+                    case 4:
+                    query = "SELECT amount_transacted, transaction_type, transaction_date, description FROM transaction WHERE account_id = ? ORDER BY amount_transacted";
+                    break;
+                    case 5:
+                    query = "SELECT amount_transacted, transaction_type, transaction_date, description FROM transaction WHERE account_id = ? ORDER BY transaction_date";
+                    break;
+                    default:
+                    repeat=false;
+                    
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }
