@@ -3,6 +3,7 @@ package com.jawaskrip;
 import java.util.Map;
 import java.util.Scanner;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -20,7 +21,6 @@ public class jawaSkripFinance {
             if (resultSet.next()) {
                 return resultSet.getInt("loan_id"); // Retrieve loan_id if user has a loan
             } else {
-                System.out.println("No loan found for user_id1 : " + UserID);
                 return -1;  // Invalid user if no match is found
             }
         } catch (SQLException e) {
@@ -40,7 +40,6 @@ public class jawaSkripFinance {
             if (resultSet.next()) {
                 return resultSet.getInt("total_repayment"); // Retrieve total_repayment if user has a loan
             } else {
-                System.out.println("No loan found for user_id2: " + LoanID);
                 return -1;  // Invalid user if no match is found
             }
         } catch (SQLException e) {
@@ -60,12 +59,36 @@ public class jawaSkripFinance {
             if (resultSet.next()) {
                 return resultSet.getInt("total_amount_paid"); // Retrieve total_repayment if user has a loan
             } else {
-                System.out.println("No loan found for repayment_id3: " + LoanID);
                 return -1;  // Invalid user if no match is found
             }
         } catch (SQLException e) {
             System.out.println("Error retrieving user ID: " + e.getMessage());
             return -1;
+        }
+    }
+
+    public static String getLastPaymentDate(int LoanID) {
+        String query = "SELECT payment_date FROM loan_repayment WHERE loan_id = ? ORDER BY payment_date DESC LIMIT 1";
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, LoanID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                Timestamp timestamp = resultSet.getTimestamp("payment_date"); // Get the timestamp
+                if (timestamp != null) {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd"); // Format to extract only the date
+                    return "Last payment on " + dateFormat.format(timestamp);
+                } else {
+                    return "No payment found";
+                }
+            } else {
+                return "No payment found";  // Invalid user if no match is found
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving user ID: " + e.getMessage());
+            return "No payment found";
         }
     }
 
@@ -141,7 +164,7 @@ public class jawaSkripFinance {
                         payment_per_period = total_repayment / (repayment_period * 12);
                         System.out.println("You need to pay RM" + payment_per_period + " per month");
 
-                        String updateSQL = "INSERT INTO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date, pay_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        String updateSQL = "INSERT INTO loan (user_id, principal_amount, annual_interest_rate, repayment_period, payment_per_period, total_repayment, start_date, end_date, pay_interval, remaining_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                         try (Connection connection = DatabaseUtil.getConnection();
                         PreparedStatement preparedStatement = connection.prepareStatement(updateSQL)) {
 
@@ -155,6 +178,7 @@ public class jawaSkripFinance {
                         preparedStatement.setDate(7, Date.valueOf(LocalDate.now()));
                         preparedStatement.setDate(8, Date.valueOf(LocalDate.now().plusMonths((long) (repayment_period * 12))));
                         preparedStatement.setString(9, "Monthly");
+                        preparedStatement.setDouble(10, total_repayment);
                         // Execute the query
                         int rowsAffected = preparedStatement.executeUpdate();
 
@@ -232,26 +256,31 @@ public class jawaSkripFinance {
 
                 double payment = input.nextDouble();
 
-                String insertSQL3 = "INSERT INTO loan_repayment (loan_id, payment_amount, payment_date, total_amount_paid) VALUES (?, ?, ?, ?)";
+                String insertSQL3 = "INSERT INTO loan_repayment (loan_id, payment_amount, payment_date) VALUES (?, ?, ?)";
+                String updateSQL3 = "UPDATE loan SET total_amount_paid = ? where loan_id = ?";
                 String updateSQL4 = "UPDATE loan SET remaining_amount = ?, total_amount_paid = total_amount_paid + ? WHERE loan_id = ?";
 
                 try (Connection connection = DatabaseUtil.getConnection();
                     PreparedStatement preparedStatement = connection.prepareStatement(insertSQL3);
+                    PreparedStatement preparedStatement12 = connection.prepareStatement(updateSQL3);
                     PreparedStatement preparedStatement2 = connection.prepareStatement(updateSQL4)) {
 
                     // Set parameters for the query
                     preparedStatement.setInt(1, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
                     preparedStatement.setDouble(2, payment);
                     preparedStatement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                    preparedStatement.setDouble(4, getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
                     int rowsAffected = preparedStatement.executeUpdate();
+
+                    preparedStatement12.setDouble(1, getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
+                    preparedStatement12.setInt(2, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+                    int rowsAffected12 = preparedStatement12.executeUpdate();
 
                     preparedStatement2.setDouble(1, getTotalRepaymentFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))) - getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));
                     preparedStatement2.setDouble(2, payment);
                     preparedStatement2.setDouble(3, getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
                     int rowsAffected2 = preparedStatement2.executeUpdate();
 
-                    if (rowsAffected > 0 && rowsAffected2 > 0) {
+                    if (rowsAffected > 0 && rowsAffected12 > 0 && rowsAffected2 > 0) {
                         System.out.println("Repayment successful.");
                         // Check if loan is fully repaid
                         if (getTotalAmountPaidFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))) >= getTotalRepaymentFromLoanID(getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)))) {

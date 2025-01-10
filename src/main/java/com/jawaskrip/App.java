@@ -46,9 +46,13 @@ public class App extends Application {
         
         boolean truth = true;
         while(truth){
+            CDSR.balance= CDSR.getBalanceFromUsername(login.username);
+            CDSR.savingBalance = CDSR.getSavingsBalanceFromUserID(CDSR.getUserIDFromUsername(login.username));
+            CDSR.loanBalance = CDSR.getLoanBalanceFromLoanID(jawaSkripFinance.getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+
             System.out.printf("Account balance: %.2f\n", CDSR.balance);
-            System.out.printf("Savings: %.2f\\n", CDSR.savingBalance);
-            System.out.printf("Loan: %.2f\\n", CDSR.loanBalance);
+            System.out.printf("Savings: %.2f\n", CDSR.savingBalance);
+            System.out.printf("Loan: %.2f (%s)\n", CDSR.loanBalance, jawaSkripFinance.getLastPaymentDate(jawaSkripFinance.getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username))));    //add function to show last payment date
 
             System.out.println("==Transactions==");
             System.out.println("1.Credit \n2.Debit\n3.Savings\n4.Credit Loan\n5.Deposit Interest Predictor\n6.Spending Trends\n7.Saving growth\n8.Loan Repayment\n9.History\n10.Logout");

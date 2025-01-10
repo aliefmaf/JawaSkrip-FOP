@@ -39,7 +39,7 @@ public class DataVisualizer {
     public XYChart.Series<String, Number> getSavingsGrowth() {
         XYChart.Series<String, Number> savingsData = new XYChart.Series<>();
         savingsData.setName("Savings Growth");
-        String query = "SELECT amount_saved, transaction_date_only FROM savings_transaction WHERE savings_id = ? ORDER BY transaction_date_only";
+        String query = "SELECT amount_saved, transaction_date_only FROM savings_transaction WHERE savings_id = ? ORDER BY transaction_date_only ASC";
         try (Connection connection = DatabaseUtil.getConnection(); 
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setInt(1, CDSR.getSavingsIDFromUserID(CDSR.getUserIDFromUsername(login.username)));

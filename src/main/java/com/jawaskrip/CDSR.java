@@ -56,7 +56,7 @@ public class CDSR {
     }
 
     public static double getLoanBalanceFromLoanID(int loanID) {
-        String query = "SELECT remaining_amount FROM loan_repayment WHERE loan_id = ?";
+        String query = "SELECT remaining_amount FROM loan WHERE loan_id = ?";
         try (Connection connection = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
@@ -462,6 +462,7 @@ public class CDSR {
                 if (!hasTransactions) {
                     System.out.println("| No transactions found for this user.                       |");
                     repeat=false;
+                    break;
                 }
 
                 // Footer

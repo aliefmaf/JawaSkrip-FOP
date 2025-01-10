@@ -13,6 +13,8 @@ public class login {
         System.out.print("Enter a username: ");
         username = scanner.nextLine();
 
+        System.out.print("Enter an email: ");
+        String email = scanner.nextLine();
 
         System.out.print("Enter a password: ");
         String password = scanner.nextLine();
@@ -91,7 +93,7 @@ public class login {
                     ResultSet resultSet = preparedStatement.executeQuery();
 
                     if (resultSet.next()) {
-                        System.out.println("Login successful! Welcome, " + username + "!");
+                        System.out.println("Login successful! Welcome, " + username + "!\n");
                         success = true; // Login successful, exit loop
                     } else {
                         System.out.println("Invalid username or password. Please try again.");
