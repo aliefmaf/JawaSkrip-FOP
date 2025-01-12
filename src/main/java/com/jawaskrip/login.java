@@ -2,8 +2,10 @@ package com.jawaskrip;
 
 import java.sql.*;
 import java.util.Scanner;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+//import java.security.MessageDigest;
+//import java.security.NoSuchAlgorithmException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 
 public class login {
     public static String username;
@@ -13,16 +15,38 @@ public class login {
         System.out.print("Enter a username: ");
         username = scanner.nextLine();
 
+        String email; 
+        while(true){
         System.out.print("Enter an email: ");
-        String email = scanner.nextLine();
+         email = scanner.nextLine();
 
-        System.out.print("Enter a password: ");
-        String password = scanner.nextLine();
+         if (email.endsWith("@gmail.com")){
+            break; 
+        }else{
+            System.out.println("Invalid email address!");
+        }
+        }
+
+        String password; 
+       while(true){
+        System.out.print("Enter a password(password must have special characters and not more than 12 characters): ");
+         password = scanner.nextLine();
+        
+        System.out.print("Enter password again: ");
+        String password2 = scanner.nextLine();
+        System.out.println("");
+
+        if (isPasswordValid(password,password2)) {
+            break;
+        } else {
+            System.out.println("Invalid password. Please try again.");
+        }
+       }
 
         // Hash password for security
         String hashedPassword = hashPassword(password);
 
-        String insertQuery = "INSERT INTO profile (username, password) VALUES (?, ?)";
+        String insertQuery = "INSERT INTO profile (username, email,password) VALUES (?, ?, ?)";
         String insertAccountQuery = "INSERT INTO account (user_id) VALUES (?)";
         String insertSavingsQuery = "INSERT INTO savings (user_id) VALUES (?)";
 
@@ -35,7 +59,8 @@ public class login {
 
             // Set parameters for the query
             preparedStatement.setString(1, username);
-            preparedStatement.setString(2, hashedPassword);
+            preparedStatement.setString(2, email);
+            preparedStatement.setString(3, hashedPassword);
             preparedStatement.executeUpdate();
 
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
@@ -106,6 +131,13 @@ public class login {
         }
     }
 
+     // Method to validate the password
+     private static boolean isPasswordValid(String password, String password2) {
+        // Check length and presence of at least one special character
+        String specialCharacterPattern = ".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*";
+        return password.length() <= 12 && password.matches(specialCharacterPattern) && password.equals(password2);
+    }
+    /* 
     // Hash the password using SHA-256 
     public static String hashPassword(String password) {
         try {
@@ -119,17 +151,10 @@ public class login {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Error hashing password", e);
         }
+*/
+    // Hash the password using BCrypt
+    public static String hashPassword(String password) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        return passwordEncoder.encode(password);
     }
 }
-
-/*
- * How to connect to db
-    try (Connection connection = DatabaseUtil.getConnection()) {
-        System.out.println("Connected to PostgreSQL database!");
-    } catch (SQLException e) {
-        System.out.println("Connection failure.");
-        e.printStackTrace();
-    }
- * 
- * 
- */
