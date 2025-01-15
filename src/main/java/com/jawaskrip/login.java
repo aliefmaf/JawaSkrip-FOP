@@ -96,32 +96,37 @@ public class login {
             username = scanner.nextLine();
 
             if (username.equals("!")){
-                break; 
-            }
-            else {
+                System.exit(0);
+                break;
+            } else {
                 System.out.print("Enter your password: ");
                 String password = scanner.nextLine();
 
                 // Hash the entered password to compare with the stored hash
                 String hashedPassword = hashPassword(password);
 
-                String selectQuery = "SELECT * FROM profile WHERE username = ? AND password = ?";
+                String selectQuery = "SELECT password FROM profile WHERE username = ?";
 
                 try (Connection connection = DatabaseUtil.getConnection();
                     PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
 
                     // Set parameters for the query
                     preparedStatement.setString(1, username);
-                    preparedStatement.setString(2, hashedPassword);
-
                     // Execute the query
                     ResultSet resultSet = preparedStatement.executeQuery();
 
                     if (resultSet.next()) {
-                        System.out.println("Login successful! Welcome, " + username + "!\n");
-                        success = true; // Login successful, exit loop
+                        String storedHashedPassword = resultSet.getString("password");
+                        // Compare entered password with stored hash
+                        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+                        if (passwordEncoder.matches(password, storedHashedPassword)) {
+                            System.out.println("Login successful! Welcome, " + username + "!\n");
+                            success = true; // Login successful, exit loop
+                        } else {
+                            System.out.println("Invalid username or password. Please try again.");
+                        }
                     } else {
-                        System.out.println("Invalid username or password. Please try again.");
+                        System.out.println("User not found. Please try again.");
                     }
 
                 } catch (SQLException e) {

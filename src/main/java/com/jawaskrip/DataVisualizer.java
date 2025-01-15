@@ -1,7 +1,7 @@
 package com.jawaskrip;
 import javafx.scene.chart.XYChart;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.sql.*;
 
 public class DataVisualizer {
@@ -18,7 +18,7 @@ public class DataVisualizer {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            Map<String, Double> dateToAmountMap = new HashMap<>();
+            Map<String, Double> dateToAmountMap = new TreeMap<>();
             while (resultSet.next()) {
             String date = resultSet.getString("transaction_date_only");
             double amount = resultSet.getDouble("amount_transacted");
@@ -46,7 +46,7 @@ public class DataVisualizer {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            Map<String, Double> dateToAmountMap = new HashMap<>();
+            Map<String, Double> dateToAmountMap = new TreeMap<>();
             while (resultSet.next()) {
             String date = resultSet.getString("transaction_date_only");
             double amount = resultSet.getDouble("amount_saved");
