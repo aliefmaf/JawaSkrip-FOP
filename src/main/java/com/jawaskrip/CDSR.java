@@ -218,9 +218,20 @@ public class CDSR {
 
         System.out.println("==Credit==");
         Scanner scan = new Scanner(System.in);
-        System.out.print("Enter amount: ");
-        double cre = scan.nextDouble();
-        scan.nextLine();
+
+        double cre = 0.0;
+        boolean validInput = false;
+        while (!validInput) {
+            System.out.print("Enter amount: ");
+            try {
+                cre = scan.nextDouble(); // Try to read a double
+                scan.nextLine();
+                validInput = true; // If successful, set validInput to true
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scan.nextLine(); // Consume the invalid input to avoid an infinite loop
+            }
+        }
 
         while(truth == true){
             System.out.print("Description : ");
@@ -283,9 +294,20 @@ public class CDSR {
         String desc = "";
         System.out.println("==Debit==");
         Scanner scan = new Scanner(System.in);
-        System.out.print("Enter amount: ");
-        double deb = scan.nextDouble();
-        scan.nextLine();
+
+        double deb = 0.0;
+        boolean validInput = false;
+        while (!validInput) {
+            System.out.print("Enter amount: ");
+            try {
+                deb = scan.nextDouble(); // Try to read a double
+                scan.nextLine();
+                validInput = true; // If successful, set validInput to true
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scan.nextLine(); // Consume the invalid input to avoid an infinite loop
+            }
+        }
 
         if(svngs==true){
             extra = (save/100.0)*deb;

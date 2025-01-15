@@ -17,14 +17,14 @@ public class login {
 
         String email; 
         while(true){
-        System.out.print("Enter an email: ");
-         email = scanner.nextLine();
+            System.out.print("Enter an email: ");
+            email = scanner.nextLine();
 
-         if (email.endsWith("@gmail.com")){
-            break; 
-        }else{
-            System.out.println("Invalid email address!");
-        }
+            if (email.endsWith("@gmail.com")){
+                break; 
+            }else{
+                System.out.println("Invalid email address!");
+            }
         }
 
         String password; 

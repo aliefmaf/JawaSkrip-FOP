@@ -21,14 +21,25 @@ public class App extends Application {
 
 
         Scanner sc = new Scanner(System.in);
-        int choice;
+        int choice=0;
 
         System.out.println("== Ledger System == ");
 
         do {
             System.out.print("Login or Register \n1. Login \n2. Register \n3. Exit \n->");
-            choice = sc.nextInt();
-            sc.nextLine();  // Consume newline character
+            
+            boolean validInput = false;
+            while (!validInput) {
+                String input = sc.nextLine(); // Read the input as a string
+    
+                // Modify the regex to allow only positive integers
+                if (input.matches("\\d+")) {  // Accepts only digits (no negative or decimal points)
+                    choice = Integer.parseInt(input);
+                    validInput = true;
+                } else {
+                    System.out.println("Invalid input");
+                }
+            }
             // Login page
             if (choice == 1) {
                 login.loginUser(sc);
@@ -41,6 +52,7 @@ public class App extends Application {
                 System.exit(0);
                 break; 
             }
+
         } while (choice != 1);
         
         
@@ -57,8 +69,18 @@ public class App extends Application {
             System.out.println("==Transactions==");
             System.out.println("1.Credit \n2.Debit\n3.Savings\n4.Credit Loan\n5.Deposit Interest Predictor\n6.Spending Trends\n7.Saving growth\n8.Loan Repayment\n9.History\n10.Logout");
 
-            choice = sc.nextInt();
-
+            boolean validInput = false;
+            while (!validInput) {
+                String input = sc.nextLine(); // Read the input as a string
+    
+                // Modify the regex to allow only positive integers
+                if (input.matches("\\d+")) {  // Accepts only digits (no negative or decimal points)
+                    choice = Integer.parseInt(input);
+                    validInput = true;
+                } else {
+                    System.out.println("Invalid input");
+                }
+            }
             switch(choice){
                 case 1:
                 if (!CDSR.compareDates(jawaSkripFinance.getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)))) break;
