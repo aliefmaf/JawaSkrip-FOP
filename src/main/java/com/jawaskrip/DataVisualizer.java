@@ -3,6 +3,7 @@ import javafx.scene.chart.XYChart;
 import java.util.Map;
 import java.util.TreeMap;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 
 public class DataVisualizer {
 
@@ -10,7 +11,7 @@ public class DataVisualizer {
         XYChart.Series<String, Number> spendingData = new XYChart.Series<>();
         spendingData.setName("Spending Trends");
 
-        String query = "SELECT amount_transacted, transaction_date_only FROM transaction WHERE account_id = ? AND transaction_type = 'Credit' ORDER BY transaction_date_only";
+        String query = "SELECT amount_transacted, transaction_date_only FROM transaction WHERE account_id = ? AND transaction_type = 'Credit' ORDER BY transaction_date_only ASC";
         try (Connection connection = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
@@ -67,22 +68,42 @@ public class DataVisualizer {
     public XYChart.Series<String, Number> getLoanRepayments() {
         XYChart.Series<String, Number> loanData = new XYChart.Series<>();
         loanData.setName("Loan Repayments");
-        String query = "SELECT total_amount_paid FROM loan WHERE loan_id = ?";
+        String query = "SELECT payment_amount, payment_date FROM loan_repayment WHERE loan_id = ? ORDER BY payment_date ASC";
         
         try (Connection connection = DatabaseUtil.getConnection(); 
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            
             preparedStatement.setInt(1, jawaSkripFinance.getLoanIDFromUserID(CDSR.getUserIDFromUsername(login.username)));
+            
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                int i=1;
+                double cumulativeSum = 0;  // To keep track of the cumulative sum
+                
+                // Using TreeMap to store the cumulative sum for each date
+                TreeMap<Date, Double> cumulativePayments = new TreeMap<>();
+                
                 while (resultSet.next()) {
-                    double totalRepayment = resultSet.getDouble("total_amount_paid");
-                    loanData.getData().add(new XYChart.Data<>(String.valueOf(i), totalRepayment));
-                    i++;
+                    double totalRepayment = resultSet.getDouble("payment_amount");  // Get the repayment amount from the database
+                    Date transactionDate = resultSet.getDate("payment_date");  // Get the date from the database
+                    
+                    cumulativeSum += totalRepayment;  // Update cumulative sum
+                    cumulativePayments.put(transactionDate, cumulativeSum);  // Store the cumulative sum with the date as the key
+                }
+                
+                // Add the data to the chart in the same order as fetched (since it's sorted in descending order)
+                for (Map.Entry<Date, Double> entry : cumulativePayments.entrySet()) {
+                    // Format the date to a string if needed, or use the Date object directly as the X-axis value
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  // Custom date format
+                    String formattedDate = sdf.format(entry.getKey());
+                    
+                    loanData.getData().add(new XYChart.Data<>(formattedDate, entry.getValue()));
                 }
             }
+            
         } catch (SQLException e) {
             System.err.println("Database error while fetching loan repayments: " + e.getMessage());
         }
+        
         return loanData;
     }
+
 }
