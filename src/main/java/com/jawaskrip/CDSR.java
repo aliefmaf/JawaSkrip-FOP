@@ -1,4 +1,6 @@
 package com.jawaskrip;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -437,7 +439,7 @@ public class CDSR {
         }
     }
 
-
+    
     public static void history(){
         Scanner scan = new Scanner(System.in);
         boolean repeat=true;
@@ -490,9 +492,19 @@ public class CDSR {
                 // Footer
                 System.out.println("=====================================");
 
-                System.out.println("Filtering option\n1.Date range\n2.Amount range\n3.Transaction type\n==================\nSorting option\n4.Sort by amount\n5.Sort by date\n0.Exit");
-                choice = scan.nextInt();
-                scan.nextLine();
+                System.out.println("Filtering option\n1.Date range\n2.Amount range\n3.Transaction type\n==================\nSorting option\n4.Sort by amount\n5.Sort by date\n\n6. Export to CSV\n0. Exit");
+                boolean validInput = false;
+                while (!validInput) {
+                    String input = scan.nextLine(); // Read the input as a string
+        
+                    // Modify the regex to allow only positive integers
+                    if (input.matches("-?\\d+")) {  // Accepts only digits (no negative or decimal points)
+                        choice = Integer.parseInt(input);
+                        validInput = true;
+                    } else {
+                        System.out.println("Invalid input");
+                    }
+                }
                 
                 switch(choice){
                     case 1:
@@ -520,6 +532,9 @@ public class CDSR {
                     case 5:
                     query = "SELECT amount_transacted, transaction_type, transaction_date, description FROM transaction WHERE account_id = ? ORDER BY transaction_date";
                     break;
+                    case 6:
+                    exportQueryToCSV(getAccountIdFromUsername(login.username), System.getProperty("user.home") + "\\Downloads\\transaction_history.csv");
+                    break;
                     default:
                     repeat=false;
                     
@@ -531,4 +546,37 @@ public class CDSR {
         }
     }
 
+    public static void exportQueryToCSV(int accountId, String outputPath) {
+        String query = "SELECT amount_transacted, transaction_type, transaction_date, description " +
+                       "FROM transaction WHERE account_id = ?";
+
+        try (Connection connection = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             FileWriter csvWriter = new FileWriter(outputPath)) {
+
+            preparedStatement.setInt(1, accountId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Write the header
+            csvWriter.append("ID,Amount Transacted,Transaction Type,Transaction Date,Description\n");
+            // Write each row of the query result
+            int i=1;
+            while (resultSet.next()) {
+                double amountTransacted = resultSet.getDouble("amount_transacted");
+                String transactionType = resultSet.getString("transaction_type");
+                String transactionDate = resultSet.getString("transaction_date");
+                String description = resultSet.getString("description");
+
+                csvWriter.append(String.format("%d,%f,%s,%s,%s\n", i++, amountTransacted, transactionType, transactionDate, description));
+            }
+
+            System.out.println("Data exported successfully to: " + outputPath);
+
+        } catch (SQLException e) {
+            System.err.println("Database error: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("File writing error: " + e.getMessage());
+        }
+    }
+    
 }

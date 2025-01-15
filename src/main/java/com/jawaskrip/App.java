@@ -33,7 +33,7 @@ public class App extends Application {
                 String input = sc.nextLine(); // Read the input as a string
     
                 // Modify the regex to allow only positive integers
-                if (input.matches("\\d+")) {  // Accepts only digits (no negative or decimal points)
+                if (input.matches("-?\\d+")) {  // Accepts only digits (no negative or decimal points)
                     choice = Integer.parseInt(input);
                     validInput = true;
                 } else {
@@ -74,7 +74,7 @@ public class App extends Application {
                 String input = sc.nextLine(); // Read the input as a string
     
                 // Modify the regex to allow only positive integers
-                if (input.matches("\\d+")) {  // Accepts only digits (no negative or decimal points)
+                if (input.matches("-?\\d+")) {  // Accepts only digits (no negative or decimal points)
                     choice = Integer.parseInt(input);
                     validInput = true;
                 } else {
